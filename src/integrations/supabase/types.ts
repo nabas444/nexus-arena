@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      tournaments: {
+        Row: {
+          banner_hue: number
+          created_at: string
+          format: string
+          game: string
+          id: string
+          max_teams: number
+          organizer: string
+          organizer_id: string | null
+          prize_pool: number
+          region: string
+          registered_teams: number
+          rules: string | null
+          start_date: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          banner_hue?: number
+          created_at?: string
+          format: string
+          game: string
+          id?: string
+          max_teams: number
+          organizer: string
+          organizer_id?: string | null
+          prize_pool?: number
+          region?: string
+          registered_teams?: number
+          rules?: string | null
+          start_date: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          banner_hue?: number
+          created_at?: string
+          format?: string
+          game?: string
+          id?: string
+          max_teams?: number
+          organizer?: string
+          organizer_id?: string | null
+          prize_pool?: number
+          region?: string
+          registered_teams?: number
+          rules?: string | null
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
