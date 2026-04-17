@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { TournamentCard } from "@/components/TournamentCard";
+import { CreateTournamentDialog } from "@/components/CreateTournamentDialog";
 import { Input } from "@/components/ui/input";
-import { tournaments, Tournament } from "@/lib/mock-data";
+import { Tournament } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
+import { useTournaments } from "@/hooks/use-tournaments";
 
 type FilterStatus = "all" | Tournament["status"];
 
@@ -20,6 +22,7 @@ const filters: { value: FilterStatus; label: string }[] = [
 const Tournaments = () => {
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [query, setQuery] = useState("");
+  const { data: tournaments = [], isLoading, isError, error } = useTournaments();
 
   const filtered = tournaments.filter((t) => {
     if (filter !== "all" && t.status !== filter) return false;
@@ -30,10 +33,21 @@ const Tournaments = () => {
   return (
     <AppShell>
       <div className="container py-10 space-y-8">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
-          <span className="font-mono text-[10px] tracking-[0.25em] text-primary">// TOURNAMENT GRID</span>
-          <h1 className="font-display text-3xl md:text-5xl font-black">All <span className="text-gradient">Tournaments</span></h1>
-          <p className="text-muted-foreground max-w-2xl">Find your next battlefield. Filter by status, format, or game.</p>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row md:items-end md:justify-between gap-4"
+        >
+          <div className="space-y-2">
+            <span className="font-mono text-[10px] tracking-[0.25em] text-primary">// TOURNAMENT GRID</span>
+            <h1 className="font-display text-3xl md:text-5xl font-black">
+              All <span className="text-gradient">Tournaments</span>
+            </h1>
+            <p className="text-muted-foreground max-w-2xl">
+              Find your next battlefield. Filter by status, format, or game.
+            </p>
+          </div>
+          <CreateTournamentDialog />
         </motion.div>
 
         <div className="flex flex-col md:flex-row gap-3 md:items-center">
@@ -66,9 +80,23 @@ const Tournaments = () => {
           </div>
         </div>
 
-        {filtered.length === 0 ? (
-          <div className="text-center py-20 text-muted-foreground font-mono text-sm">
-            // NO TOURNAMENTS MATCH YOUR FILTERS
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20 text-muted-foreground font-mono text-sm gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            // LOADING TOURNAMENTS
+          </div>
+        ) : isError ? (
+          <div className="text-center py-20 text-destructive font-mono text-sm">
+            // FAILED TO LOAD: {error instanceof Error ? error.message : "unknown error"}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20 space-y-4">
+            <div className="text-muted-foreground font-mono text-sm">
+              {tournaments.length === 0
+                ? "// NO TOURNAMENTS YET — BE THE FIRST TO HOST ONE"
+                : "// NO TOURNAMENTS MATCH YOUR FILTERS"}
+            </div>
+            {tournaments.length === 0 && <CreateTournamentDialog />}
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
