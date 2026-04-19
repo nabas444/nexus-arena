@@ -48,12 +48,26 @@ interface Props {
 export const CreateTournamentDialog = ({ trigger }: Props) => {
   const [open, setOpen] = useState(false);
   const create = useCreateTournament();
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   const form = useForm<TournamentFormValues>({
     resolver: zodResolver(tournamentFormSchema),
     defaultValues: defaultTournamentValues,
     mode: "onBlur",
   });
+
+  if (!authLoading && !user) {
+    return (
+      <Button
+        onClick={() => navigate("/auth")}
+        className="bg-gradient-primary text-primary-foreground border-transparent shadow-[var(--glow-primary)] font-bold h-11"
+      >
+        <LogIn className="h-4 w-4 mr-2" />
+        Sign in to host
+      </Button>
+    );
+  }
 
   const hue = form.watch("bannerHue");
 
