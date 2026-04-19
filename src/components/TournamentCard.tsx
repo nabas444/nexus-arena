@@ -1,8 +1,23 @@
 import { motion } from "framer-motion";
-import { Trophy, Users, Radio, Calendar, Eye } from "lucide-react";
+import { Trophy, Users, Calendar, Eye, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Tournament, formatPrize, formatViewers } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useAuth } from "@/hooks/use-auth";
+import { useDeleteTournament, type TournamentWithOwner } from "@/hooks/use-tournaments";
+import { toast } from "sonner";
 
 const statusConfig: Record<Tournament["status"], { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground" },
@@ -12,13 +27,26 @@ const statusConfig: Record<Tournament["status"], { label: string; className: str
 };
 
 interface Props {
-  tournament: Tournament;
+  tournament: Tournament | TournamentWithOwner;
   index?: number;
 }
 
 export const TournamentCard = ({ tournament: t, index = 0 }: Props) => {
   const status = statusConfig[t.status];
   const fillPct = (t.registeredTeams / t.maxTeams) * 100;
+  const { user } = useAuth();
+  const del = useDeleteTournament();
+  const ownerId = (t as TournamentWithOwner).organizerId;
+  const isOwner = !!(user && ownerId && user.id === ownerId);
+
+  const handleDelete = async () => {
+    try {
+      await del.mutateAsync(t.id);
+      toast.success("Tournament deleted");
+    } catch (e) {
+      toast.error("Could not delete", { description: e instanceof Error ? e.message : "Unknown error" });
+    }
+  };
 
   return (
     <motion.div
@@ -47,7 +75,6 @@ export const TournamentCard = ({ tournament: t, index = 0 }: Props) => {
               backgroundImage: `radial-gradient(circle at 30% 30%, hsl(${t.bannerHue} 100% 60% / 0.6) 0%, transparent 50%)`,
             }}
           />
-          {/* Grid overlay */}
           <div
             className="absolute inset-0 opacity-30"
             style={{
@@ -101,7 +128,6 @@ export const TournamentCard = ({ tournament: t, index = 0 }: Props) => {
             <span>{t.region}</span>
           </div>
 
-          {/* Team capacity bar */}
           <div className="space-y-1">
             <div className="flex items-center justify-between text-[10px] font-mono">
               <span className="flex items-center gap-1 text-muted-foreground">
@@ -120,13 +146,47 @@ export const TournamentCard = ({ tournament: t, index = 0 }: Props) => {
           </div>
         </div>
 
-        {/* Hover glow border */}
         <div className="absolute inset-0 rounded-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
           style={{
             background: `linear-gradient(135deg, hsl(${t.bannerHue} 100% 60% / 0.15), transparent 60%)`,
           }}
         />
       </Link>
+
+      {isOwner && (
+        <div className="absolute top-3 left-3 z-10">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                className="h-7 w-7 bg-background/80 backdrop-blur border-border hover:border-destructive/60 hover:text-destructive"
+                aria-label="Delete tournament"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this tournament?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This permanently removes “{t.title}”. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
     </motion.div>
   );
 };
