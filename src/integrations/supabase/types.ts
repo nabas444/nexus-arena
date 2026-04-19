@@ -14,6 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
+      matches: {
+        Row: {
+          best_of: number
+          created_at: string
+          id: string
+          next_match_id: string | null
+          next_slot: string | null
+          position: number
+          round: number
+          score_a: number | null
+          score_b: number | null
+          starts_at: string | null
+          status: string
+          team_a_id: string | null
+          team_b_id: string | null
+          tournament_id: string
+          updated_at: string
+          winner_id: string | null
+        }
+        Insert: {
+          best_of?: number
+          created_at?: string
+          id?: string
+          next_match_id?: string | null
+          next_slot?: string | null
+          position: number
+          round: number
+          score_a?: number | null
+          score_b?: number | null
+          starts_at?: string | null
+          status?: string
+          team_a_id?: string | null
+          team_b_id?: string | null
+          tournament_id: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Update: {
+          best_of?: number
+          created_at?: string
+          id?: string
+          next_match_id?: string | null
+          next_slot?: string | null
+          position?: number
+          round?: number
+          score_a?: number | null
+          score_b?: number | null
+          starts_at?: string | null
+          status?: string
+          team_a_id?: string | null
+          team_b_id?: string | null
+          tournament_id?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_next_match_id_fkey"
+            columns: ["next_match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_team_a_id_fkey"
+            columns: ["team_a_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_team_b_id_fkey"
+            columns: ["team_b_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -43,6 +136,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      tournament_teams: {
+        Row: {
+          created_at: string
+          id: string
+          logo_color: string
+          name: string
+          seed: number | null
+          tag: string
+          tournament_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_color?: string
+          name: string
+          seed?: number | null
+          tag: string
+          tournament_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_color?: string
+          name?: string
+          seed?: number | null
+          tag?: string
+          tournament_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_teams_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tournaments: {
         Row: {
