@@ -1,6 +1,6 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trophy, Swords, LayoutGrid, Radio, Users, Bell, Search, Zap, LogOut, LogIn } from "lucide-react";
+import { Trophy, Swords, LayoutGrid, Radio, Users, Bell, Search, Zap, LogOut, LogIn, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -105,6 +105,9 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
                       ACCOUNT
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate("/profile")}>
+                      <UserCog className="h-4 w-4 mr-2" /> Edit profile
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="h-4 w-4 mr-2" /> Sign out
                     </DropdownMenuItem>

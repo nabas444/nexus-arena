@@ -11,6 +11,7 @@ import Bracket from "./pages/Bracket.tsx";
 import MatchDay from "./pages/MatchDay.tsx";
 import Leaderboard from "./pages/Leaderboard.tsx";
 import Auth from "./pages/Auth.tsx";
+import Profile from "./pages/Profile.tsx";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/tournaments" element={<Tournaments />} />
             <Route path="/bracket/:id" element={<Bracket />} />
             <Route path="/match-day" element={<MatchDay />} />
