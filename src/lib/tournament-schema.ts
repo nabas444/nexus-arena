@@ -6,11 +6,11 @@ export const tournamentFormSchema = z.object({
   organizer: z.string().trim().min(2, "Organizer name is required").max(60),
   format: z.enum(["single-elim", "double-elim"]),
   status: z.enum(["draft", "open"]),
-  maxTeams: z.coerce.number().int().min(2, "Min 2 teams").max(256, "Max 256 teams"),
-  prizePool: z.coerce.number().int().min(0, "Cannot be negative").max(100_000_000),
+  maxTeams: z.coerce.number<number>().int().min(2, "Min 2 teams").max(256, "Max 256 teams"),
+  prizePool: z.coerce.number<number>().int().min(0, "Cannot be negative").max(100_000_000),
   startDate: z.string().min(1, "Start date is required"),
   region: z.string().trim().min(2).max(40),
-  bannerHue: z.coerce.number().int().min(0).max(360),
+  bannerHue: z.coerce.number<number>().int().min(0).max(360),
   rules: z.string().trim().max(2000).optional().or(z.literal("")),
 });
 
