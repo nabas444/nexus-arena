@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Check, Loader2, Pencil, Sparkles, Trophy, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -13,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   BracketMatch,
   BracketTeam,
+  matchesKey,
   useBracketMatches,
   useTournamentTeams,
   useUpdateMatchScore,
@@ -264,6 +266,7 @@ const Bracket = () => {
   const updateScore = useUpdateMatchScore(id ?? "");
 
   const isOwner = !!(user && tournament?.organizerId && user.id === tournament.organizerId);
+  const qc = useQueryClient();
 
   // Realtime subscriptions for live score updates
   useEffect(() => {
@@ -274,16 +277,14 @@ const Bracket = () => {
         "postgres_changes",
         { event: "*", schema: "public", table: "matches", filter: `tournament_id=eq.${id}` },
         () => {
-          // Let react-query refetch via invalidation handled in mutation; just touch the cache here.
-          // Using a passive refetch via window event to avoid pulling qc here.
-          document.dispatchEvent(new CustomEvent("bracket-refresh"));
+          qc.invalidateQueries({ queryKey: matchesKey(id) });
         }
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [id]);
+  }, [id, qc]);
 
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
 
