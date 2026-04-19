@@ -105,6 +105,9 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
                       ACCOUNT
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate("/profile")}>
+                      <UserCog className="h-4 w-4 mr-2" /> Edit profile
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="h-4 w-4 mr-2" /> Sign out
                     </DropdownMenuItem>
