@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          handle: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          handle: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          handle?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tournaments: {
         Row: {
           banner_hue: number
@@ -23,7 +53,7 @@ export type Database = {
           id: string
           max_teams: number
           organizer: string
-          organizer_id: string | null
+          organizer_id: string
           prize_pool: number
           region: string
           registered_teams: number
@@ -41,7 +71,7 @@ export type Database = {
           id?: string
           max_teams: number
           organizer: string
-          organizer_id?: string | null
+          organizer_id: string
           prize_pool?: number
           region?: string
           registered_teams?: number
@@ -59,7 +89,7 @@ export type Database = {
           id?: string
           max_teams?: number
           organizer?: string
-          organizer_id?: string | null
+          organizer_id?: string
           prize_pool?: number
           region?: string
           registered_teams?: number

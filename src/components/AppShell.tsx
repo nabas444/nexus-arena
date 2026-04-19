@@ -1,7 +1,17 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trophy, Swords, LayoutGrid, Radio, Users, Bell, Search, Zap } from "lucide-react";
+import { Trophy, Swords, LayoutGrid, Radio, Users, Bell, Search, Zap, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 const navItems = [
   { to: "/", label: "Hub", icon: LayoutGrid },
@@ -13,6 +23,14 @@ const navItems = [
 
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Signed out");
+    navigate("/");
+  };
+  const initials = (user?.user_metadata?.handle || user?.email || "??").slice(0, 2).toUpperCase();
   return (
     <div className="relative min-h-screen text-foreground">
       {/* Topbar */}
@@ -69,13 +87,40 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
               <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px_hsl(var(--accent))]" />
             </Button>
             <div className="hidden sm:flex items-center gap-2 pl-2 ml-1 border-l border-border">
-              <div className="h-8 w-8 rounded-full bg-gradient-accent grid place-items-center font-display text-xs font-bold">
-                VX
-              </div>
-              <div className="hidden lg:block leading-tight">
-                <div className="text-xs font-semibold">Vex0r</div>
-                <div className="text-[10px] font-mono text-muted-foreground">RANK #142</div>
-              </div>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 group" aria-label="Account menu">
+                      <div className="h-8 w-8 rounded-full bg-gradient-accent grid place-items-center font-display text-xs font-bold">
+                        {initials}
+                      </div>
+                      <div className="hidden lg:block leading-tight text-left">
+                        <div className="text-xs font-semibold truncate max-w-[120px]">{user.email}</div>
+                        <div className="text-[10px] font-mono text-muted-foreground">SIGNED IN</div>
+                      </div>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuLabel className="font-mono text-[10px] tracking-widest text-muted-foreground">
+                      ACCOUNT
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="h-4 w-4 mr-2" /> Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="font-semibold"
+                  onClick={() => navigate("/auth")}
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Sign in
+                </Button>
+              )}
             </div>
           </div>
         </div>
