@@ -1,6 +1,6 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trophy, Swords, LayoutGrid, Radio, Users, Bell, Search, Zap, LogOut, LogIn, UserCog } from "lucide-react";
+import { Trophy, LayoutGrid, Radio, Users, Bell, Search, Zap, LogOut, LogIn, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -16,7 +16,6 @@ import { toast } from "sonner";
 const navItems = [
   { to: "/", label: "Hub", icon: LayoutGrid },
   { to: "/tournaments", label: "Tournaments", icon: Trophy },
-  { to: "/bracket/tour1", label: "Bracket", icon: Swords },
   { to: "/match-day", label: "Match Day", icon: Radio },
   { to: "/leaderboard", label: "Rankings", icon: Users },
 ];
@@ -156,9 +155,9 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
       <footer className="border-t border-border/60 mt-16 bg-background/60 backdrop-blur">
         <div className="container py-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-muted-foreground font-mono">
           <div className="flex items-center gap-2">
-            <span className="live-dot" /> SERVERS NOMINAL · 142,503 SPECTATORS ONLINE
+            <span className="live-dot" /> SERVERS NOMINAL
           </div>
-          <div>NEXUS ARENA © 2025 — POWERED BY THE GRID</div>
+          <div>NEXUS ARENA © {new Date().getFullYear()} — POWERED BY THE GRID</div>
         </div>
       </footer>
     </div>

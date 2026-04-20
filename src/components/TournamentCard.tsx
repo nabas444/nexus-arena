@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { Trophy, Users, Calendar, Eye, Trash2 } from "lucide-react";
+import { Trophy, Users, Calendar, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Tournament, formatPrize, formatViewers } from "@/lib/mock-data";
+import { Tournament } from "@/lib/tournament-types";
+import { formatPrize } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -87,12 +88,6 @@ export const TournamentCard = ({ tournament: t, index = 0 }: Props) => {
             <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-background/80 backdrop-blur px-2.5 py-1 rounded-full border border-live/40">
               <span className="live-dot" />
               <span className="font-mono text-[10px] font-bold text-live tracking-wider">LIVE</span>
-              {t.viewers && (
-                <span className="font-mono text-[10px] text-foreground/80 ml-1 flex items-center gap-1">
-                  <Eye className="h-3 w-3" />
-                  {formatViewers(t.viewers)}
-                </span>
-              )}
             </div>
           )}
           {t.status === "open" && (

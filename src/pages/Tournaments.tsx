@@ -5,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { TournamentCard } from "@/components/TournamentCard";
 import { CreateTournamentDialog } from "@/components/CreateTournamentDialog";
 import { Input } from "@/components/ui/input";
-import { Tournament } from "@/lib/mock-data";
+import { Tournament } from "@/lib/tournament-types";
 import { Button } from "@/components/ui/button";
 import { useTournaments } from "@/hooks/use-tournaments";
 
