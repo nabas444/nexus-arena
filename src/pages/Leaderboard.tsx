@@ -1,11 +1,53 @@
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Flame, Crown, Loader2, Users } from "lucide-react";
+import { Flame, Crown, Loader2, Users, Filter, X } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { TeamLogo } from "@/components/TeamLogo";
 import { useTeamRankings } from "@/hooks/use-rankings";
+import { useTournaments } from "@/hooks/use-tournaments";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const Leaderboard = () => {
-  const { data: sorted = [], isLoading } = useTeamRankings();
+  const [region, setRegion] = useState<string>("all");
+  const [tournamentId, setTournamentId] = useState<string>("all");
+
+  const { data: tournaments = [] } = useTournaments();
+  const { data: sorted = [], isLoading } = useTeamRankings({ region, tournamentId });
+
+  const regions = useMemo(() => {
+    const set = new Set<string>();
+    tournaments.forEach((t) => t.region && set.add(t.region));
+    return Array.from(set).sort();
+  }, [tournaments]);
+
+  const tournamentsInScope = useMemo(() => {
+    if (region === "all") return tournaments;
+    return tournaments.filter((t) => t.region === region);
+  }, [tournaments, region]);
+
+  const isFiltered = region !== "all" || tournamentId !== "all";
+  const activeTournament = tournaments.find((t) => t.id === tournamentId);
+
+  const handleRegionChange = (v: string) => {
+    setRegion(v);
+    if (v !== "all" && tournamentId !== "all") {
+      const stillValid = tournaments.some((t) => t.id === tournamentId && t.region === v);
+      if (!stillValid) setTournamentId("all");
+    }
+  };
+
+  const clearFilters = () => {
+    setRegion("all");
+    setTournamentId("all");
+  };
 
   return (
     <AppShell>
@@ -20,6 +62,54 @@ const Leaderboard = () => {
           </p>
         </motion.div>
 
+        <div className="flex flex-col md:flex-row md:items-center gap-3 rounded-xl border border-border bg-card/60 p-3">
+          <div className="flex items-center gap-2 text-muted-foreground font-mono text-[10px] tracking-widest md:pr-2 md:border-r md:border-border">
+            <Filter className="h-3.5 w-3.5" /> FILTERS
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 flex-1">
+            <div className="flex-1 min-w-[160px]">
+              <Select value={region} onValueChange={handleRegionChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Region" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All regions</SelectItem>
+                  {regions.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <Select value={tournamentId} onValueChange={setTournamentId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tournament" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All tournaments</SelectItem>
+                  {tournamentsInScope.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {isFiltered && (
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="font-mono text-[10px]">
+                {activeTournament ? activeTournament.title : `Region: ${region}`}
+              </Badge>
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
+                <X className="h-3.5 w-3.5 mr-1" /> Clear
+              </Button>
+            </div>
+          )}
+        </div>
+
         {isLoading ? (
           <div className="flex items-center justify-center py-20 text-muted-foreground font-mono text-sm gap-2">
             <Loader2 className="h-4 w-4 animate-spin" /> // CALCULATING RANKINGS
@@ -27,10 +117,13 @@ const Leaderboard = () => {
         ) : sorted.length === 0 ? (
           <div className="rounded-2xl border border-border bg-gradient-card p-12 text-center max-w-xl mx-auto">
             <Users className="h-10 w-10 mx-auto text-muted-foreground/40 mb-4" />
-            <h2 className="font-display text-xl font-bold mb-2">No teams ranked yet</h2>
+            <h2 className="font-display text-xl font-bold mb-2">
+              {isFiltered ? "No teams match this filter" : "No teams ranked yet"}
+            </h2>
             <p className="text-sm text-muted-foreground">
-              Once organizers register teams and complete matches, the leaderboard fills up
-              automatically. Hosts a tournament to seed the grid.
+              {isFiltered
+                ? "Try widening the filters or clear them to see the global leaderboard."
+                : "Once organizers register teams and complete matches, the leaderboard fills up automatically. Hosts a tournament to seed the grid."}
             </p>
           </div>
         ) : (

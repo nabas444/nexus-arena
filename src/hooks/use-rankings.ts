@@ -23,6 +23,7 @@ interface MatchRow {
   winner_id: string | null;
   status: string;
   updated_at: string;
+  tournament_id?: string;
 }
 
 interface TeamRow {
@@ -37,19 +38,53 @@ const BASE_RATING = 1500;
 const WIN_DELTA = 28;
 const LOSS_DELTA = 18;
 
-export const rankingsKey = ["team-rankings"] as const;
+export interface RankingFilters {
+  region?: string; // "all" or a region name
+  tournamentId?: string; // "all" or a tournament id
+}
 
-export function useTeamRankings() {
+export const rankingsKey = (filters?: RankingFilters) =>
+  ["team-rankings", filters?.region ?? "all", filters?.tournamentId ?? "all"] as const;
+
+export function useTeamRankings(filters: RankingFilters = {}) {
+  const region = filters.region && filters.region !== "all" ? filters.region : undefined;
+  const tournamentId =
+    filters.tournamentId && filters.tournamentId !== "all" ? filters.tournamentId : undefined;
+
   return useQuery({
-    queryKey: rankingsKey,
+    queryKey: rankingsKey(filters),
     queryFn: async (): Promise<RankedTeam[]> => {
+      // Resolve which tournament IDs are in scope based on filters
+      let scopedTournamentIds: string[] | null = null;
+      if (tournamentId) {
+        scopedTournamentIds = [tournamentId];
+      } else if (region) {
+        const { data: regionT, error: rErr } = await supabase
+          .from("tournaments")
+          .select("id")
+          .eq("region", region);
+        if (rErr) throw rErr;
+        scopedTournamentIds = (regionT ?? []).map((t) => t.id);
+        if (scopedTournamentIds.length === 0) return [];
+      }
+
+      const teamsQuery = supabase
+        .from("tournament_teams")
+        .select("id,name,tag,logo_color,tournament_id");
+      const matchesQuery = supabase
+        .from("matches")
+        .select("id,team_a_id,team_b_id,winner_id,status,updated_at,tournament_id")
+        .eq("status", "completed")
+        .order("updated_at", { ascending: true });
+
+      if (scopedTournamentIds) {
+        teamsQuery.in("tournament_id", scopedTournamentIds);
+        matchesQuery.in("tournament_id", scopedTournamentIds);
+      }
+
       const [{ data: teams, error: tErr }, { data: matches, error: mErr }] = await Promise.all([
-        supabase.from("tournament_teams").select("id,name,tag,logo_color,tournament_id"),
-        supabase
-          .from("matches")
-          .select("id,team_a_id,team_b_id,winner_id,status,updated_at")
-          .eq("status", "completed")
-          .order("updated_at", { ascending: true }),
+        teamsQuery,
+        matchesQuery,
       ]);
       if (tErr) throw tErr;
       if (mErr) throw mErr;
