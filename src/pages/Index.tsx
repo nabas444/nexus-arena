@@ -1,21 +1,33 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Radio, Trophy, Zap, TrendingUp, Eye, Calendar } from "lucide-react";
+import { ArrowRight, Radio, Trophy, Zap, TrendingUp, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
 import { TournamentCard } from "@/components/TournamentCard";
 import { TeamLogo } from "@/components/TeamLogo";
 import { Button } from "@/components/ui/button";
-import { tournaments, liveMatches, teams, featuredTournament, formatPrize, formatViewers } from "@/lib/mock-data";
+import { useTournaments } from "@/hooks/use-tournaments";
+import { useLiveMatches } from "@/hooks/use-live-matches";
+import { usePlatformStats, useTeamRankings } from "@/hooks/use-rankings";
+import { formatPrize, formatCompact } from "@/lib/formatters";
 
 const Hub = () => {
+  const { data: tournaments = [], isLoading: tLoading } = useTournaments();
+  const { data: liveMatches = [] } = useLiveMatches();
+  const { data: rankings = [] } = useTeamRankings();
+  const { data: stats } = usePlatformStats();
+
   const live = tournaments.filter((t) => t.status === "ongoing");
   const open = tournaments.filter((t) => t.status === "open");
+  const featuredTournament = live[0] ?? open[0] ?? tournaments[0];
+  const featuredMatch = liveMatches[0];
+  const topTeams = rankings.slice(0, 4);
 
   return (
     <AppShell>
       {/* HERO */}
       <section className="relative overflow-hidden bg-gradient-hero">
-        <div className="absolute inset-0 opacity-50"
+        <div
+          className="absolute inset-0 opacity-50"
           style={{
             backgroundImage: `radial-gradient(circle at 80% 50%, hsl(270 100% 50% / 0.25), transparent 40%), radial-gradient(circle at 20% 80%, hsl(187 100% 50% / 0.18), transparent 40%)`,
           }}
@@ -28,7 +40,11 @@ const Hub = () => {
               className="inline-flex items-center gap-2 glass rounded-full px-3 py-1.5 text-[11px] font-mono tracking-widest"
             >
               <span className="live-dot" />
-              <span className="text-foreground/90">LIVE NOW · {live.length} TOURNAMENTS · {formatViewers(180924)} WATCHING</span>
+              <span className="text-foreground/90">
+                {live.length > 0
+                  ? `LIVE NOW · ${live.length} TOURNAMENT${live.length === 1 ? "" : "S"} · ${liveMatches.length} MATCH${liveMatches.length === 1 ? "" : "ES"} STREAMING`
+                  : `THE GRID IS OPEN · ${tournaments.length} TOURNAMENT${tournaments.length === 1 ? "" : "S"} TOTAL`}
+              </span>
             </motion.div>
 
             <motion.h1
@@ -58,12 +74,21 @@ const Hub = () => {
               transition={{ delay: 0.3 }}
               className="flex flex-wrap gap-3"
             >
-              <Button asChild size="lg" className="bg-gradient-primary hover:opacity-90 text-primary-foreground font-bold tracking-wide shadow-[var(--glow-primary)] h-12 px-6">
+              <Button
+                asChild
+                size="lg"
+                className="bg-gradient-primary hover:opacity-90 text-primary-foreground font-bold tracking-wide shadow-[var(--glow-primary)] h-12 px-6"
+              >
                 <Link to="/tournaments">
                   Browse Tournaments <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-border hover:border-primary/60 hover:bg-primary/5 h-12 px-6 font-bold tracking-wide">
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="border-border hover:border-primary/60 hover:bg-primary/5 h-12 px-6 font-bold tracking-wide"
+              >
                 <Link to="/match-day">
                   <Radio className="mr-2 h-4 w-4 text-live" />
                   Match Day Mode
@@ -71,7 +96,7 @@ const Hub = () => {
               </Button>
             </motion.div>
 
-            {/* Stats strip */}
+            {/* Stats strip — real data */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -79,19 +104,21 @@ const Hub = () => {
               className="grid grid-cols-3 gap-3 pt-6 max-w-lg"
             >
               {[
-                { label: "PRIZES PAID", value: "$12.4M" },
-                { label: "ACTIVE TEAMS", value: "8,420" },
-                { label: "TOURNAMENTS", value: "1,203" },
+                { label: "PRIZES POOLED", value: stats ? formatPrize(stats.totalPrizePool) : "—" },
+                { label: "ACTIVE TEAMS", value: stats ? formatCompact(stats.activeTeams) : "—" },
+                { label: "TOURNAMENTS", value: stats ? formatCompact(stats.totalTournaments) : "—" },
               ].map((s) => (
                 <div key={s.label} className="glass rounded-lg px-3 py-2.5">
                   <div className="font-display text-xl font-bold text-gradient">{s.value}</div>
-                  <div className="font-mono text-[9px] tracking-[0.2em] text-muted-foreground mt-0.5">{s.label}</div>
+                  <div className="font-mono text-[9px] tracking-[0.2em] text-muted-foreground mt-0.5">
+                    {s.label}
+                  </div>
                 </div>
               ))}
             </motion.div>
           </div>
 
-          {/* Featured live card */}
+          {/* Featured live card — real or graceful empty */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -103,53 +130,82 @@ const Hub = () => {
               <div className="p-6 space-y-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="live-dot" />
-                    <span className="font-mono text-[10px] tracking-[0.2em] text-live font-bold">LIVE FEATURE</span>
+                    <span className={featuredMatch ? "live-dot" : "h-2 w-2 rounded-full bg-muted-foreground/30"} />
+                    <span className="font-mono text-[10px] tracking-[0.2em] font-bold text-live">
+                      {featuredMatch ? "LIVE FEATURE" : "FEATURED"}
+                    </span>
                   </div>
-                  <span className="font-mono text-xs text-muted-foreground flex items-center gap-1">
-                    <Eye className="h-3 w-3" /> {formatViewers(featuredTournament.viewers || 0)}
-                  </span>
                 </div>
 
-                <div>
-                  <div className="font-mono text-[10px] tracking-widest text-muted-foreground">{featuredTournament.game.toUpperCase()}</div>
-                  <h3 className="font-display text-2xl font-bold mt-1">{featuredTournament.title}</h3>
-                  <div className="font-display text-3xl font-black text-gradient mt-2">{formatPrize(featuredTournament.prizePool)}</div>
-                </div>
+                {featuredTournament ? (
+                  <div>
+                    <div className="font-mono text-[10px] tracking-widest text-muted-foreground">
+                      {featuredTournament.game.toUpperCase()}
+                    </div>
+                    <h3 className="font-display text-2xl font-bold mt-1">{featuredTournament.title}</h3>
+                    <div className="font-display text-3xl font-black text-gradient mt-2">
+                      {formatPrize(featuredTournament.prizePool)}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="font-mono text-[10px] tracking-widest text-muted-foreground">
+                      WAITING FOR FIRST TOURNAMENT
+                    </div>
+                    <h3 className="font-display text-2xl font-bold mt-1">Be the first organizer.</h3>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Create a tournament, add teams, and the grid lights up here.
+                    </p>
+                  </div>
+                )}
 
-                {liveMatches[0] && (
+                {featuredMatch?.team_a && featuredMatch?.team_b && (
                   <div className="rounded-lg bg-background/50 border border-border p-4 space-y-3">
                     <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground tracking-widest">
-                      <span>QUARTERFINAL · BO3</span>
-                      <span className="text-live flex items-center gap-1"><span className="live-dot" /> MAP 2</span>
+                      <span>R{featuredMatch.round + 1} · BO{featuredMatch.best_of}</span>
+                      <span className="text-live flex items-center gap-1">
+                        <span className="live-dot" /> LIVE
+                      </span>
                     </div>
                     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <TeamLogo team={liveMatches[0].teamA!} />
+                        <TeamLogo team={featuredMatch.team_a} />
                         <div className="min-w-0">
-                          <div className="font-display font-bold text-sm truncate">{liveMatches[0].teamA?.name}</div>
-                          <div className="font-mono text-[10px] text-muted-foreground">RANK #{liveMatches[0].teamA?.rank}</div>
+                          <div className="font-display font-bold text-sm truncate">
+                            {featuredMatch.team_a.name}
+                          </div>
+                          <div className="font-mono text-[10px] text-muted-foreground">
+                            {featuredMatch.team_a.tag}
+                          </div>
                         </div>
                       </div>
                       <div className="font-display font-black text-2xl tabular-nums text-center">
-                        <span className="text-primary">{liveMatches[0].scoreA ?? 0}</span>
+                        <span className="text-primary">{featuredMatch.score_a ?? 0}</span>
                         <span className="text-muted-foreground mx-1.5">:</span>
-                        <span className="text-secondary">{liveMatches[0].scoreB ?? 0}</span>
+                        <span className="text-secondary">{featuredMatch.score_b ?? 0}</span>
                       </div>
                       <div className="flex items-center gap-2.5 min-w-0 flex-row-reverse text-right">
-                        <TeamLogo team={liveMatches[0].teamB!} />
+                        <TeamLogo team={featuredMatch.team_b} />
                         <div className="min-w-0">
-                          <div className="font-display font-bold text-sm truncate">{liveMatches[0].teamB?.name}</div>
-                          <div className="font-mono text-[10px] text-muted-foreground">RANK #{liveMatches[0].teamB?.rank}</div>
+                          <div className="font-display font-bold text-sm truncate">
+                            {featuredMatch.team_b.name}
+                          </div>
+                          <div className="font-mono text-[10px] text-muted-foreground">
+                            {featuredMatch.team_b.tag}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                <Button asChild className="w-full bg-gradient-accent hover:opacity-90 text-accent-foreground font-bold tracking-wide">
-                  <Link to={`/bracket/${featuredTournament.id}`}>
-                    View Bracket <ArrowRight className="ml-1 h-4 w-4" />
+                <Button
+                  asChild
+                  className="w-full bg-gradient-accent hover:opacity-90 text-accent-foreground font-bold tracking-wide"
+                >
+                  <Link to={featuredTournament ? `/bracket/${featuredTournament.id}` : "/tournaments"}>
+                    {featuredTournament ? "View Bracket" : "Browse Tournaments"}
+                    <ArrowRight className="ml-1 h-4 w-4" />
                   </Link>
                 </Button>
               </div>
@@ -159,41 +215,74 @@ const Hub = () => {
       </section>
 
       {/* LIVE TOURNAMENTS */}
-      <section className="container py-12 space-y-6">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Radio className="h-4 w-4 text-live" />
-              <span className="font-mono text-[10px] tracking-[0.25em] text-live">LIVE NOW</span>
+      {(tLoading || live.length > 0) && (
+        <section className="container py-12 space-y-6">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Radio className="h-4 w-4 text-live" />
+                <span className="font-mono text-[10px] tracking-[0.25em] text-live">LIVE NOW</span>
+              </div>
+              <h2 className="font-display text-2xl md:text-3xl font-bold">Tournaments On Fire</h2>
             </div>
-            <h2 className="font-display text-2xl md:text-3xl font-bold">Tournaments On Fire</h2>
+            <Link
+              to="/tournaments"
+              className="text-sm font-semibold text-primary hover:text-primary-glow flex items-center gap-1"
+            >
+              View all <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
-          <Link to="/tournaments" className="text-sm font-semibold text-primary hover:text-primary-glow flex items-center gap-1">
-            View all <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {live.map((t, i) => <TournamentCard key={t.id} tournament={t} index={i} />)}
-        </div>
-      </section>
+          {tLoading ? (
+            <div className="flex items-center justify-center py-12 text-muted-foreground font-mono text-sm gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> // SYNCING
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {live.map((t, i) => (
+                <TournamentCard key={t.id} tournament={t} index={i} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* OPEN REGISTRATION */}
-      <section className="container py-8 space-y-6">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Trophy className="h-4 w-4 text-success" />
-              <span className="font-mono text-[10px] tracking-[0.25em] text-success">JOIN NOW</span>
+      {open.length > 0 && (
+        <section className="container py-8 space-y-6">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Trophy className="h-4 w-4 text-success" />
+                <span className="font-mono text-[10px] tracking-[0.25em] text-success">JOIN NOW</span>
+              </div>
+              <h2 className="font-display text-2xl md:text-3xl font-bold">Open Registration</h2>
             </div>
-            <h2 className="font-display text-2xl md:text-3xl font-bold">Open Registration</h2>
           </div>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {open.map((t, i) => <TournamentCard key={t.id} tournament={t} index={i} />)}
-        </div>
-      </section>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {open.map((t, i) => (
+              <TournamentCard key={t.id} tournament={t} index={i} />
+            ))}
+          </div>
+        </section>
+      )}
 
-      {/* TOP TEAMS */}
+      {/* Empty grid CTA */}
+      {!tLoading && tournaments.length === 0 && (
+        <section className="container py-12">
+          <div className="rounded-2xl border border-border bg-gradient-card p-10 text-center max-w-2xl mx-auto">
+            <Trophy className="h-10 w-10 mx-auto text-muted-foreground/40 mb-4" />
+            <h3 className="font-display text-xl font-bold mb-2">No tournaments on the grid yet</h3>
+            <p className="text-sm text-muted-foreground mb-5">
+              Sign in and host the first one — it'll show up here automatically.
+            </p>
+            <Button asChild className="bg-gradient-primary text-primary-foreground">
+              <Link to="/tournaments">Go to Tournaments</Link>
+            </Button>
+          </div>
+        </section>
+      )}
+
+      {/* TOP TEAMS — derived from real match results */}
       <section className="container py-12 space-y-6">
         <div className="flex items-end justify-between gap-4">
           <div>
@@ -203,50 +292,65 @@ const Hub = () => {
             </div>
             <h2 className="font-display text-2xl md:text-3xl font-bold">Top Teams This Season</h2>
           </div>
-          <Link to="/leaderboard" className="text-sm font-semibold text-primary hover:text-primary-glow flex items-center gap-1">
-            Full rankings <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+          {topTeams.length > 0 && (
+            <Link
+              to="/leaderboard"
+              className="text-sm font-semibold text-primary hover:text-primary-glow flex items-center gap-1"
+            >
+              Full rankings <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          )}
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {teams.slice(0, 4).map((t, i) => (
-            <motion.div
-              key={t.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="glass rounded-xl p-4 hover:border-primary/40 transition group cursor-pointer"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <TeamLogo team={t} />
-                <div className="min-w-0 flex-1">
-                  <div className="font-display font-bold text-sm truncate group-hover:text-primary transition">{t.name}</div>
-                  <div className="font-mono text-[10px] text-muted-foreground">RANK #{t.rank} · {t.region}</div>
+        {topTeams.length === 0 ? (
+          <div className="rounded-xl border border-border bg-card/50 p-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Rankings appear once tournaments complete their first matches.
+            </p>
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {topTeams.map((t, i) => (
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="glass rounded-xl p-4 hover:border-primary/40 transition group"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <TeamLogo team={t} />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-display font-bold text-sm truncate group-hover:text-primary transition">
+                      {t.name}
+                    </div>
+                    <div className="font-mono text-[10px] text-muted-foreground">RANK #{t.rank}</div>
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[10px] font-mono">
-                  <span className="text-muted-foreground tracking-widest">MOMENTUM</span>
-                  <span className="text-foreground tabular-nums">{t.momentum}</span>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[10px] font-mono">
+                    <span className="text-muted-foreground tracking-widest">MOMENTUM</span>
+                    <span className="text-foreground tabular-nums">{t.momentum}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-muted overflow-hidden relative">
+                    <div
+                      className="h-full bg-gradient-momentum transition-all"
+                      style={{ width: `${t.momentum}%` }}
+                    />
+                    {t.momentum >= 75 && (
+                      <Zap className="absolute -top-1 right-1 h-3.5 w-3.5 text-accent animate-pulse" />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between font-mono text-[10px] pt-1">
+                    <span className="text-success">{t.wins}W</span>
+                    <span className="text-destructive">{t.losses}L</span>
+                    <span className="text-muted-foreground tabular-nums">{t.rating} ELO</span>
+                  </div>
                 </div>
-                <div className="h-1.5 rounded-full bg-muted overflow-hidden relative">
-                  <div
-                    className="h-full bg-gradient-momentum transition-all"
-                    style={{ width: `${t.momentum}%` }}
-                  />
-                  {t.momentum >= 75 && (
-                    <Zap className="absolute -top-1 right-1 h-3.5 w-3.5 text-accent animate-pulse" />
-                  )}
-                </div>
-                <div className="flex items-center justify-between font-mono text-[10px] pt-1">
-                  <span className="text-success">{t.wins}W</span>
-                  <span className="text-destructive">{t.losses}L</span>
-                  <span className="text-muted-foreground tabular-nums">{t.rating} ELO</span>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </section>
     </AppShell>
   );
