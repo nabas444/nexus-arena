@@ -23,6 +23,7 @@ interface MatchRow {
   winner_id: string | null;
   status: string;
   updated_at: string;
+  tournament_id?: string;
 }
 
 interface TeamRow {
