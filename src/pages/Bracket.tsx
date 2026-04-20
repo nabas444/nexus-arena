@@ -20,7 +20,7 @@ import {
   useUpdateMatchScore,
 } from "@/hooks/use-bracket";
 import { useTournaments } from "@/hooks/use-tournaments";
-import { formatPrize } from "@/lib/mock-data";
+import { formatPrize } from "@/lib/formatters";
 
 const MATCH_W = 256;
 const MATCH_H = 88;
