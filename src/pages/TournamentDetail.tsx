@@ -18,6 +18,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { TournamentMatchFeed } from "@/components/TournamentMatchFeed";
 import { useAuth } from "@/hooks/use-auth";
 import { useTournaments } from "@/hooks/use-tournaments";
 import { useAddTeam, useTournamentTeams, useBracketMatches } from "@/hooks/use-bracket";
@@ -330,6 +331,9 @@ const TournamentDetail = () => {
               </ul>
             )}
           </section>
+
+          {/* Live / recent / upcoming match feed */}
+          <TournamentMatchFeed tournamentId={tournament.id} />
         </div>
 
         {/* SIDEBAR */}
