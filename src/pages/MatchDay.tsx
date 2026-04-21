@@ -248,6 +248,7 @@ const MatchDay = () => {
   const { data: liveMatches = [], isLoading, error } = useLiveMatches();
   const { data: upcoming = [] } = useUpcomingMatches();
   const [featuredId, setFeaturedId] = useState<string | null>(null);
+  const [broadcast, setBroadcast] = useState(false);
 
   // Auto-select first live match
   useEffect(() => {
@@ -267,23 +268,92 @@ const MatchDay = () => {
   const next = upcoming[0];
   const countdown = useCountdown(next?.starts_at);
 
+  // Lock body scroll + ESC to exit broadcast mode
+  useEffect(() => {
+    if (!broadcast) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setBroadcast(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [broadcast]);
+
+  // Auto-exit broadcast if no live match left
+  useEffect(() => {
+    if (broadcast && !featured) setBroadcast(false);
+  }, [broadcast, featured]);
+
   return (
-    <AppShell>
-      <div className="container py-8 space-y-6">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="flex items-center gap-2">
-            <Radio className="h-4 w-4 text-live" />
-            <span className="font-mono text-[10px] tracking-[0.25em] text-live">// MATCH DAY MODE</span>
-          </div>
-          <h1 className="font-display text-3xl md:text-5xl font-black mt-1">
-            Live <span className="text-gradient-accent">Battlefield</span>
-          </h1>
-          <p className="text-sm text-muted-foreground mt-2 font-mono">
-            {liveMatches.length > 0
-              ? `${liveMatches.length} match${liveMatches.length === 1 ? "" : "es"} streaming · realtime sync active`
-              : "No matches live right now — the grid is quiet."}
-          </p>
-        </motion.div>
+    <>
+      {/* BROADCAST MODE — fullscreen, no nav */}
+      <AnimatePresence>
+        {broadcast && featured && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-background overflow-auto"
+            role="dialog"
+            aria-label="Broadcast mode"
+          >
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+              <span className="hidden sm:flex items-center gap-1.5 font-mono text-[10px] tracking-widest text-muted-foreground bg-card/80 backdrop-blur border border-border rounded-md px-2 py-1">
+                <kbd className="font-sans">ESC</kbd> TO EXIT
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setBroadcast(false)}
+                className="bg-card/80 backdrop-blur"
+              >
+                <Minimize2 className="h-4 w-4 mr-1.5" /> Exit
+                <X className="h-4 w-4 ml-1 sm:hidden" />
+              </Button>
+            </div>
+            <div className="min-h-screen flex items-center justify-center p-4 sm:p-8">
+              <div className="w-full max-w-7xl">
+                <FeaturedMatch match={featured} />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AppShell>
+        <div className="container py-8 space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-end justify-between gap-4 flex-wrap"
+          >
+            <div>
+              <div className="flex items-center gap-2">
+                <Radio className="h-4 w-4 text-live" />
+                <span className="font-mono text-[10px] tracking-[0.25em] text-live">// MATCH DAY MODE</span>
+              </div>
+              <h1 className="font-display text-3xl md:text-5xl font-black mt-1">
+                Live <span className="text-gradient-accent">Battlefield</span>
+              </h1>
+              <p className="text-sm text-muted-foreground mt-2 font-mono">
+                {liveMatches.length > 0
+                  ? `${liveMatches.length} match${liveMatches.length === 1 ? "" : "es"} streaming · realtime sync active`
+                  : "No matches live right now — the grid is quiet."}
+              </p>
+            </div>
+            <Button
+              onClick={() => setBroadcast(true)}
+              disabled={!featured}
+              className="bg-gradient-primary text-primary-foreground font-bold shadow-[var(--glow-primary)]"
+              title={featured ? "Enter broadcast mode" : "No live match to broadcast"}
+            >
+              <Maximize2 className="h-4 w-4 mr-2" /> Broadcast mode
+            </Button>
+          </motion.div>
 
         {isLoading && (
           <div className="rounded-2xl border border-border bg-card/50 p-12 text-center">
