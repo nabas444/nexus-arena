@@ -477,8 +477,9 @@ const MatchDay = () => {
             )}
           </div>
         </div>
-      </div>
-    </AppShell>
+        </div>
+      </AppShell>
+    </>
   );
 };
 
