@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Tournaments from "./pages/Tournaments.tsx";
+import TournamentDetail from "./pages/TournamentDetail.tsx";
 import Bracket from "./pages/Bracket.tsx";
 import MatchDay from "./pages/MatchDay.tsx";
 import Leaderboard from "./pages/Leaderboard.tsx";
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/tournaments" element={<Tournaments />} />
+            <Route path="/tournaments/:id" element={<TournamentDetail />} />
             <Route path="/bracket/:id" element={<Bracket />} />
             <Route path="/match-day" element={<MatchDay />} />
             <Route path="/leaderboard" element={<Leaderboard />} />

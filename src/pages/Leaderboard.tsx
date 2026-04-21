@@ -17,10 +17,11 @@ import { Badge } from "@/components/ui/badge";
 
 const Leaderboard = () => {
   const [region, setRegion] = useState<string>("all");
+  const [game, setGame] = useState<string>("all");
   const [tournamentId, setTournamentId] = useState<string>("all");
 
   const { data: tournaments = [] } = useTournaments();
-  const { data: sorted = [], isLoading } = useTeamRankings({ region, tournamentId });
+  const { data: sorted = [], isLoading } = useTeamRankings({ region, game, tournamentId });
 
   const regions = useMemo(() => {
     const set = new Set<string>();
@@ -28,26 +29,53 @@ const Leaderboard = () => {
     return Array.from(set).sort();
   }, [tournaments]);
 
-  const tournamentsInScope = useMemo(() => {
-    if (region === "all") return tournaments;
-    return tournaments.filter((t) => t.region === region);
-  }, [tournaments, region]);
+  const games = useMemo(() => {
+    const set = new Set<string>();
+    tournaments.forEach((t) => t.game && set.add(t.game));
+    return Array.from(set).sort();
+  }, [tournaments]);
 
-  const isFiltered = region !== "all" || tournamentId !== "all";
+  const tournamentsInScope = useMemo(() => {
+    return tournaments.filter((t) => {
+      if (region !== "all" && t.region !== region) return false;
+      if (game !== "all" && t.game !== game) return false;
+      return true;
+    });
+  }, [tournaments, region, game]);
+
+  const isFiltered = region !== "all" || game !== "all" || tournamentId !== "all";
   const activeTournament = tournaments.find((t) => t.id === tournamentId);
+
+  const resetTournamentIfNeeded = (nextRegion: string, nextGame: string) => {
+    if (tournamentId === "all") return;
+    const stillValid = tournaments.some(
+      (t) =>
+        t.id === tournamentId &&
+        (nextRegion === "all" || t.region === nextRegion) &&
+        (nextGame === "all" || t.game === nextGame)
+    );
+    if (!stillValid) setTournamentId("all");
+  };
 
   const handleRegionChange = (v: string) => {
     setRegion(v);
-    if (v !== "all" && tournamentId !== "all") {
-      const stillValid = tournaments.some((t) => t.id === tournamentId && t.region === v);
-      if (!stillValid) setTournamentId("all");
-    }
+    resetTournamentIfNeeded(v, game);
+  };
+
+  const handleGameChange = (v: string) => {
+    setGame(v);
+    resetTournamentIfNeeded(region, v);
   };
 
   const clearFilters = () => {
     setRegion("all");
+    setGame("all");
     setTournamentId("all");
   };
+
+  const activeChipLabel = activeTournament
+    ? activeTournament.title
+    : [game !== "all" ? game : null, region !== "all" ? region : null].filter(Boolean).join(" · ");
 
   return (
     <AppShell>
