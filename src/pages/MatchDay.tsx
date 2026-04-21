@@ -1,7 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Radio, Eye, Clock, Sparkles, Flame, Trophy, ArrowRight, WifiOff } from "lucide-react";
+import {
+  Radio,
+  Eye,
+  Clock,
+  Sparkles,
+  Flame,
+  Trophy,
+  ArrowRight,
+  WifiOff,
+  Maximize2,
+  Minimize2,
+  X,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { useLiveMatches, useUpcomingMatches, type LiveMatchRow } from "@/hooks/use-live-matches";
