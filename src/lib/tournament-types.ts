@@ -16,4 +16,5 @@ export interface Tournament {
   region: string;
   bannerHue: number;
   organizer: string;
+  rules?: string | null;
 }

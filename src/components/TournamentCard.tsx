@@ -58,7 +58,7 @@ export const TournamentCard = ({ tournament: t, index = 0 }: Props) => {
       className="group relative"
     >
       <Link
-        to={`/bracket/${t.id}`}
+        to={`/tournaments/${t.id}`}
         className="block relative overflow-hidden rounded-xl bg-gradient-card border border-border hover:border-primary/40 transition-all duration-300"
         style={{
           boxShadow: "0 8px 32px -12px hsl(240 50% 0% / 0.5)",

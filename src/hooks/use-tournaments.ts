@@ -17,6 +17,7 @@ type DBRow = {
   banner_hue: number;
   organizer: string;
   organizer_id: string | null;
+  rules: string | null;
 };
 
 export type TournamentWithOwner = Tournament & { organizerId: string | null };
@@ -35,10 +36,11 @@ const rowToTournament = (r: DBRow): TournamentWithOwner => ({
   bannerHue: r.banner_hue,
   organizer: r.organizer,
   organizerId: r.organizer_id,
+  rules: r.rules,
 });
 
 const SELECT_COLS =
-  "id,title,game,format,status,prize_pool,max_teams,registered_teams,start_date,region,banner_hue,organizer,organizer_id";
+  "id,title,game,format,status,prize_pool,max_teams,registered_teams,start_date,region,banner_hue,organizer,organizer_id,rules";
 
 export const tournamentsQueryKey = ["tournaments"] as const;
 

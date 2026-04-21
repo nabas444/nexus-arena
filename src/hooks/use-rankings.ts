@@ -40,14 +40,21 @@ const LOSS_DELTA = 18;
 
 export interface RankingFilters {
   region?: string; // "all" or a region name
+  game?: string; // "all" or a game name
   tournamentId?: string; // "all" or a tournament id
 }
 
 export const rankingsKey = (filters?: RankingFilters) =>
-  ["team-rankings", filters?.region ?? "all", filters?.tournamentId ?? "all"] as const;
+  [
+    "team-rankings",
+    filters?.region ?? "all",
+    filters?.game ?? "all",
+    filters?.tournamentId ?? "all",
+  ] as const;
 
 export function useTeamRankings(filters: RankingFilters = {}) {
   const region = filters.region && filters.region !== "all" ? filters.region : undefined;
+  const game = filters.game && filters.game !== "all" ? filters.game : undefined;
   const tournamentId =
     filters.tournamentId && filters.tournamentId !== "all" ? filters.tournamentId : undefined;
 
@@ -58,11 +65,11 @@ export function useTeamRankings(filters: RankingFilters = {}) {
       let scopedTournamentIds: string[] | null = null;
       if (tournamentId) {
         scopedTournamentIds = [tournamentId];
-      } else if (region) {
-        const { data: regionT, error: rErr } = await supabase
-          .from("tournaments")
-          .select("id")
-          .eq("region", region);
+      } else if (region || game) {
+        let q = supabase.from("tournaments").select("id");
+        if (region) q = q.eq("region", region);
+        if (game) q = q.eq("game", game);
+        const { data: regionT, error: rErr } = await q;
         if (rErr) throw rErr;
         scopedTournamentIds = (regionT ?? []).map((t) => t.id);
         if (scopedTournamentIds.length === 0) return [];
