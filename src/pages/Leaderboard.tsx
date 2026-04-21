@@ -110,6 +110,21 @@ const Leaderboard = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex-1 min-w-[160px]">
+              <Select value={game} onValueChange={handleGameChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Game" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All games</SelectItem>
+                  {games.map((g) => (
+                    <SelectItem key={g} value={g}>
+                      {g}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex-1 min-w-[200px]">
               <Select value={tournamentId} onValueChange={setTournamentId}>
                 <SelectTrigger>
@@ -129,7 +144,7 @@ const Leaderboard = () => {
           {isFiltered && (
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="font-mono text-[10px]">
-                {activeTournament ? activeTournament.title : `Region: ${region}`}
+                {activeChipLabel || "Filtered"}
               </Badge>
               <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
                 <X className="h-3.5 w-3.5 mr-1" /> Clear
