@@ -20,9 +20,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TournamentMatchFeed } from "@/components/TournamentMatchFeed";
 import { useAuth } from "@/hooks/use-auth";
-import { useTournaments } from "@/hooks/use-tournaments";
+import { useTournaments, useUpdateTournamentStatus } from "@/hooks/use-tournaments";
 import { useAddTeam, useTournamentTeams, useBracketMatches } from "@/hooks/use-bracket";
 import { formatPrize } from "@/lib/formatters";
+import type { Tournament } from "@/lib/tournament-types";
 
 const statusBadge: Record<string, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground border-border" },
