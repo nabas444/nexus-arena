@@ -19,9 +19,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TournamentMatchFeed } from "@/components/TournamentMatchFeed";
+import { TournamentEventFeed } from "@/components/TournamentEventFeed";
 import { useAuth } from "@/hooks/use-auth";
 import { useTournaments, useUpdateTournamentStatus } from "@/hooks/use-tournaments";
 import { useAddTeam, useTournamentTeams, useBracketMatches, useGenerateBracket } from "@/hooks/use-bracket";
+import { useTournamentEvents } from "@/hooks/use-tournament-events";
 import { formatPrize } from "@/lib/formatters";
 import type { Tournament } from "@/lib/tournament-types";
 
@@ -57,6 +59,7 @@ const TournamentDetail = () => {
   const tournament = tournaments.find((t) => t.id === id);
   const { data: teams = [], isLoading: teamsLoading } = useTournamentTeams(id);
   const { data: matches = [] } = useBracketMatches(id);
+  const tournamentEvents = useTournamentEvents(id);
 
   const addTeam = useAddTeam(id ?? "");
   const updateStatus = useUpdateTournamentStatus();
@@ -447,6 +450,9 @@ const TournamentDetail = () => {
               </ul>
             )}
           </section>
+
+          {/* Real-time event feed (status changes, bracket regen, etc.) */}
+          <TournamentEventFeed events={tournamentEvents} />
 
           {/* Live / recent / upcoming match feed */}
           <TournamentMatchFeed tournamentId={tournament.id} />
