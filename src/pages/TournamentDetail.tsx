@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { TournamentMatchFeed } from "@/components/TournamentMatchFeed";
 import { useAuth } from "@/hooks/use-auth";
 import { useTournaments, useUpdateTournamentStatus } from "@/hooks/use-tournaments";
-import { useAddTeam, useTournamentTeams, useBracketMatches } from "@/hooks/use-bracket";
+import { useAddTeam, useTournamentTeams, useBracketMatches, useGenerateBracket } from "@/hooks/use-bracket";
 import { formatPrize } from "@/lib/formatters";
 import type { Tournament } from "@/lib/tournament-types";
 
@@ -60,6 +60,7 @@ const TournamentDetail = () => {
 
   const addTeam = useAddTeam(id ?? "");
   const updateStatus = useUpdateTournamentStatus();
+  const generateBracket = useGenerateBracket(id ?? "");
   const [name, setName] = useState("");
   const [tag, setTag] = useState("");
 
@@ -101,6 +102,39 @@ const TournamentDetail = () => {
 
   const handleStatusChange = async (next: Tournament["status"]) => {
     if (!tournament || tournament.status === next) return;
+
+    // Auto-regenerate bracket when going Draft/Open -> Ongoing so it always
+    // reflects the latest registered teams. Trim to the nearest power of 2.
+    const goingLive =
+      next === "ongoing" && (tournament.status === "draft" || tournament.status === "open");
+
+    if (goingLive) {
+      if (teams.length < 2) {
+        toast.error("Need at least 2 registered teams", {
+          description: "Register more teams before launching the bracket.",
+        });
+        return;
+      }
+      const fitted = Math.pow(2, Math.floor(Math.log2(teams.length)));
+      const bracketTeams = teams.slice(0, fitted);
+      const trimmed = teams.length - fitted;
+      try {
+        // generateBracket wipes any prior matches, reseeds, and sets status=ongoing.
+        await generateBracket.mutateAsync({ teams: bracketTeams });
+        toast.success("Bracket generated", {
+          description:
+            trimmed > 0
+              ? `${fitted} teams seeded — ${trimmed} extra trimmed to fit a power-of-2 bracket.`
+              : `${fitted} teams seeded into the bracket.`,
+        });
+      } catch (err) {
+        toast.error("Could not generate bracket", {
+          description: err instanceof Error ? err.message : "Unknown error",
+        });
+      }
+      return;
+    }
+
     try {
       await updateStatus.mutateAsync({ id: tournament.id, status: next });
       toast.success("Status updated", {
