@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tournament } from "@/lib/tournament-types";
@@ -45,6 +46,25 @@ const SELECT_COLS =
 export const tournamentsQueryKey = ["tournaments"] as const;
 
 export function useTournaments() {
+  const qc = useQueryClient();
+
+  // Realtime: any change to the tournaments table refreshes every subscriber.
+  useEffect(() => {
+    const channel = supabase
+      .channel("tournaments-feed")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tournaments" },
+        () => {
+          qc.invalidateQueries({ queryKey: tournamentsQueryKey });
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
+
   return useQuery({
     queryKey: tournamentsQueryKey,
     queryFn: async (): Promise<TournamentWithOwner[]> => {
@@ -54,6 +74,31 @@ export function useTournaments() {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data as DBRow[]).map(rowToTournament);
+    },
+  });
+}
+
+export function useUpdateTournamentStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: Tournament["status"];
+    }): Promise<TournamentWithOwner> => {
+      const { data, error } = await supabase
+        .from("tournaments")
+        .update({ status })
+        .eq("id", id)
+        .select(SELECT_COLS)
+        .single();
+      if (error) throw error;
+      return rowToTournament(data as DBRow);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: tournamentsQueryKey });
     },
   });
 }
