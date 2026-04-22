@@ -59,6 +59,7 @@ const TournamentDetail = () => {
   const { data: matches = [] } = useBracketMatches(id);
 
   const addTeam = useAddTeam(id ?? "");
+  const updateStatus = useUpdateTournamentStatus();
   const [name, setName] = useState("");
   const [tag, setTag] = useState("");
 
