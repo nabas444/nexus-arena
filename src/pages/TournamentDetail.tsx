@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { TournamentMatchFeed } from "@/components/TournamentMatchFeed";
 import { useAuth } from "@/hooks/use-auth";
 import { useTournaments, useUpdateTournamentStatus } from "@/hooks/use-tournaments";
-import { useAddTeam, useTournamentTeams, useBracketMatches } from "@/hooks/use-bracket";
+import { useAddTeam, useTournamentTeams, useBracketMatches, useGenerateBracket } from "@/hooks/use-bracket";
 import { formatPrize } from "@/lib/formatters";
 import type { Tournament } from "@/lib/tournament-types";
 
@@ -60,6 +60,7 @@ const TournamentDetail = () => {
 
   const addTeam = useAddTeam(id ?? "");
   const updateStatus = useUpdateTournamentStatus();
+  const generateBracket = useGenerateBracket(id ?? "");
   const [name, setName] = useState("");
   const [tag, setTag] = useState("");
 
@@ -101,6 +102,39 @@ const TournamentDetail = () => {
 
   const handleStatusChange = async (next: Tournament["status"]) => {
     if (!tournament || tournament.status === next) return;
+
+    // Auto-regenerate bracket when going Draft/Open -> Ongoing so it always
+    // reflects the latest registered teams. Trim to the nearest power of 2.
+    const goingLive =
+      next === "ongoing" && (tournament.status === "draft" || tournament.status === "open");
+
+    if (goingLive) {
+      if (teams.length < 2) {
+        toast.error("Need at least 2 registered teams", {
+          description: "Register more teams before launching the bracket.",
+        });
+        return;
+      }
+      const fitted = Math.pow(2, Math.floor(Math.log2(teams.length)));
+      const bracketTeams = teams.slice(0, fitted);
+      const trimmed = teams.length - fitted;
+      try {
+        // generateBracket wipes any prior matches, reseeds, and sets status=ongoing.
+        await generateBracket.mutateAsync({ teams: bracketTeams });
+        toast.success("Bracket generated", {
+          description:
+            trimmed > 0
+              ? `${fitted} teams seeded — ${trimmed} extra trimmed to fit a power-of-2 bracket.`
+              : `${fitted} teams seeded into the bracket.`,
+        });
+      } catch (err) {
+        toast.error("Could not generate bracket", {
+          description: err instanceof Error ? err.message : "Unknown error",
+        });
+      }
+      return;
+    }
+
     try {
       await updateStatus.mutateAsync({ id: tournament.id, status: next });
       toast.success("Status updated", {
@@ -216,9 +250,10 @@ const TournamentDetail = () => {
                     Flip the lifecycle in real time. Updates broadcast instantly to every viewer.
                   </p>
                 </div>
-                {updateStatus.isPending && (
+                {(updateStatus.isPending || generateBracket.isPending) && (
                   <span className="font-mono text-[10px] text-muted-foreground flex items-center gap-1.5">
-                    <Loader2 className="h-3 w-3 animate-spin" /> SAVING…
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {generateBracket.isPending ? "GENERATING BRACKET…" : "SAVING…"}
                   </span>
                 )}
               </div>
@@ -226,12 +261,13 @@ const TournamentDetail = () => {
                 {(["draft", "open", "ongoing", "completed"] as const).map((s, i) => {
                   const meta = statusBadge[s];
                   const active = tournament.status === s;
+                  const busy = updateStatus.isPending || generateBracket.isPending;
                   return (
                     <button
                       key={s}
                       type="button"
                       onClick={() => handleStatusChange(s)}
-                      disabled={updateStatus.isPending || active}
+                      disabled={busy || active}
                       className={`group relative rounded-lg border px-3 py-3 text-left transition-all ${
                         active
                           ? "border-primary bg-primary/10 shadow-[var(--glow-primary)]"
@@ -257,6 +293,15 @@ const TournamentDetail = () => {
                 {tournament.status === "ongoing" && "ONGOING — bracket is live"}
                 {tournament.status === "completed" && "COMPLETED — tournament has wrapped"}
               </p>
+              {(tournament.status === "draft" || tournament.status === "open") && (
+                <p className="font-mono text-[10px] text-primary/80">
+                  // SWITCH TO ONGOING → BRACKET AUTO-GENERATES FROM {teams.length} REGISTERED TEAM
+                  {teams.length === 1 ? "" : "S"}
+                  {teams.length >= 2 &&
+                    teams.length !== Math.pow(2, Math.floor(Math.log2(teams.length))) &&
+                    ` (TRIMMED TO ${Math.pow(2, Math.floor(Math.log2(teams.length)))} FOR POWER-OF-2)`}
+                </p>
+              )}
             </section>
           )}
 
