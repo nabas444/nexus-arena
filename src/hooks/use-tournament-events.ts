@@ -12,7 +12,9 @@ export interface TournamentEvent {
   kind: TournamentEventKind;
   title: string;
   description: string;
-  at: number; // epoch ms
+  at: number; // when the client recorded the event (epoch ms)
+  occurredAt?: number; // organizer-side / DB timestamp (epoch ms) when known
+  matchCount?: number; // current match count for "went-live" events
 }
 
 const MAX_FEED = 12;
@@ -46,11 +48,11 @@ export function useTournamentEvents(tournamentId: string | undefined) {
   useEffect(() => {
     if (!tournamentId) return;
 
-    const push = (ev: Omit<TournamentEvent, "id" | "at">) => {
+    const push = (ev: Omit<TournamentEvent, "id" | "at"> & { at?: number }) => {
       const entry: TournamentEvent = {
         ...ev,
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        at: Date.now(),
+        at: ev.at ?? Date.now(),
       };
       setEvents((prev) => [entry, ...prev].slice(0, MAX_FEED));
     };
@@ -65,27 +67,45 @@ export function useTournamentEvents(tournamentId: string | undefined) {
           table: "tournaments",
           filter: `id=eq.${tournamentId}`,
         },
-        (payload) => {
-          const newStatus = (payload.new as { status?: string })?.status ?? null;
+        async (payload) => {
+          const newRow = payload.new as { status?: string; updated_at?: string };
+          const newStatus = newRow?.status ?? null;
           const oldStatus =
             lastStatusRef.current ?? (payload.old as { status?: string })?.status ?? null;
 
           if (newStatus && newStatus !== oldStatus) {
+            // Organizer-side timestamp from the DB row (set by the
+            // update_updated_at_column trigger when the organizer flipped status).
+            const occurredAt = newRow.updated_at ? new Date(newRow.updated_at).getTime() : Date.now();
+
             if (newStatus === "ongoing") {
+              // Pull the current match count straight from the DB so the
+              // figure is authoritative for every viewer.
+              const { count } = await supabase
+                .from("matches")
+                .select("id", { count: "exact", head: true })
+                .eq("tournament_id", tournamentId);
+              const matchCount = count ?? 0;
+              const stamp = new Date(occurredAt).toLocaleTimeString(undefined, {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              });
               const title = "Tournament is LIVE";
-              const description = "The bracket is locked and matches are underway.";
+              const description =
+                `${matchCount} match${matchCount === 1 ? "" : "es"} on the board · launched at ${stamp}`;
               toast.success(title, { description });
-              push({ kind: "went-live", title, description });
+              push({ kind: "went-live", title, description, occurredAt, matchCount });
             } else if (newStatus === "completed") {
               const title = "Tournament completed";
               const description = "All matches have wrapped. GG!";
               toast(title, { description });
-              push({ kind: "completed", title, description });
+              push({ kind: "completed", title, description, occurredAt });
             } else if (newStatus === "open") {
               const title = "Registration open";
               const description = "Teams can now sign up.";
               toast.success(title, { description });
-              push({ kind: "registration-open", title, description });
+              push({ kind: "registration-open", title, description, occurredAt });
             }
           }
 
