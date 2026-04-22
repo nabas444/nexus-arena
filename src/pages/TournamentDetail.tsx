@@ -20,9 +20,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TournamentMatchFeed } from "@/components/TournamentMatchFeed";
 import { useAuth } from "@/hooks/use-auth";
-import { useTournaments } from "@/hooks/use-tournaments";
+import { useTournaments, useUpdateTournamentStatus } from "@/hooks/use-tournaments";
 import { useAddTeam, useTournamentTeams, useBracketMatches } from "@/hooks/use-bracket";
 import { formatPrize } from "@/lib/formatters";
+import type { Tournament } from "@/lib/tournament-types";
 
 const statusBadge: Record<string, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground border-border" },
@@ -58,6 +59,7 @@ const TournamentDetail = () => {
   const { data: matches = [] } = useBracketMatches(id);
 
   const addTeam = useAddTeam(id ?? "");
+  const updateStatus = useUpdateTournamentStatus();
   const [name, setName] = useState("");
   const [tag, setTag] = useState("");
 
@@ -92,6 +94,20 @@ const TournamentDetail = () => {
       setTag("");
     } catch (err) {
       toast.error("Could not register", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
+    }
+  };
+
+  const handleStatusChange = async (next: Tournament["status"]) => {
+    if (!tournament || tournament.status === next) return;
+    try {
+      await updateStatus.mutateAsync({ id: tournament.id, status: next });
+      toast.success("Status updated", {
+        description: `Tournament is now ${statusBadge[next].label}.`,
+      });
+    } catch (err) {
+      toast.error("Could not update status", {
         description: err instanceof Error ? err.message : "Unknown error",
       });
     }
@@ -189,6 +205,61 @@ const TournamentDetail = () => {
       <div className="container py-10 grid lg:grid-cols-[1fr_360px] gap-8">
         {/* MAIN COLUMN */}
         <div className="space-y-8 min-w-0">
+          {/* Organizer status switcher */}
+          {isOwner && (
+            <section className="rounded-xl border border-primary/30 bg-gradient-card p-5 space-y-4 shadow-[var(--glow-primary)]">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <span className="font-mono text-[10px] tracking-[0.25em] text-primary">// ORGANIZER CONTROLS</span>
+                  <h2 className="font-display text-lg font-bold mt-1">Tournament status</h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Flip the lifecycle in real time. Updates broadcast instantly to every viewer.
+                  </p>
+                </div>
+                {updateStatus.isPending && (
+                  <span className="font-mono text-[10px] text-muted-foreground flex items-center gap-1.5">
+                    <Loader2 className="h-3 w-3 animate-spin" /> SAVING…
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {(["draft", "open", "ongoing", "completed"] as const).map((s, i) => {
+                  const meta = statusBadge[s];
+                  const active = tournament.status === s;
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => handleStatusChange(s)}
+                      disabled={updateStatus.isPending || active}
+                      className={`group relative rounded-lg border px-3 py-3 text-left transition-all ${
+                        active
+                          ? "border-primary bg-primary/10 shadow-[var(--glow-primary)]"
+                          : "border-border bg-background/40 hover:border-primary/40 hover:bg-background/60"
+                      } disabled:cursor-not-allowed`}
+                    >
+                      <div className="font-mono text-[9px] tracking-widest text-muted-foreground">
+                        STEP {i + 1}
+                      </div>
+                      <div className={`font-display text-sm font-bold mt-1 ${active ? "text-primary" : ""}`}>
+                        {meta.label.replace("● ", "")}
+                      </div>
+                      {active && (
+                        <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary animate-pulse" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="font-mono text-[10px] text-muted-foreground">
+                // {tournament.status === "draft" && "DRAFT — registration not yet open"}
+                {tournament.status === "open" && "OPEN — teams can sign up"}
+                {tournament.status === "ongoing" && "ONGOING — bracket is live"}
+                {tournament.status === "completed" && "COMPLETED — tournament has wrapped"}
+              </p>
+            </section>
+          )}
+
           {/* Prize pool + breakdown */}
           <section className="rounded-xl border border-border bg-gradient-card p-6 space-y-5">
             <div className="flex items-end justify-between gap-4 flex-wrap">
