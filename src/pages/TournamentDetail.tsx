@@ -205,6 +205,61 @@ const TournamentDetail = () => {
       <div className="container py-10 grid lg:grid-cols-[1fr_360px] gap-8">
         {/* MAIN COLUMN */}
         <div className="space-y-8 min-w-0">
+          {/* Organizer status switcher */}
+          {isOwner && (
+            <section className="rounded-xl border border-primary/30 bg-gradient-card p-5 space-y-4 shadow-[var(--glow-primary)]">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <span className="font-mono text-[10px] tracking-[0.25em] text-primary">// ORGANIZER CONTROLS</span>
+                  <h2 className="font-display text-lg font-bold mt-1">Tournament status</h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Flip the lifecycle in real time. Updates broadcast instantly to every viewer.
+                  </p>
+                </div>
+                {updateStatus.isPending && (
+                  <span className="font-mono text-[10px] text-muted-foreground flex items-center gap-1.5">
+                    <Loader2 className="h-3 w-3 animate-spin" /> SAVING…
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {(["draft", "open", "ongoing", "completed"] as const).map((s, i) => {
+                  const meta = statusBadge[s];
+                  const active = tournament.status === s;
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => handleStatusChange(s)}
+                      disabled={updateStatus.isPending || active}
+                      className={`group relative rounded-lg border px-3 py-3 text-left transition-all ${
+                        active
+                          ? "border-primary bg-primary/10 shadow-[var(--glow-primary)]"
+                          : "border-border bg-background/40 hover:border-primary/40 hover:bg-background/60"
+                      } disabled:cursor-not-allowed`}
+                    >
+                      <div className="font-mono text-[9px] tracking-widest text-muted-foreground">
+                        STEP {i + 1}
+                      </div>
+                      <div className={`font-display text-sm font-bold mt-1 ${active ? "text-primary" : ""}`}>
+                        {meta.label.replace("● ", "")}
+                      </div>
+                      {active && (
+                        <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary animate-pulse" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="font-mono text-[10px] text-muted-foreground">
+                // {tournament.status === "draft" && "DRAFT — registration not yet open"}
+                {tournament.status === "open" && "OPEN — teams can sign up"}
+                {tournament.status === "ongoing" && "ONGOING — bracket is live"}
+                {tournament.status === "completed" && "COMPLETED — tournament has wrapped"}
+              </p>
+            </section>
+          )}
+
           {/* Prize pool + breakdown */}
           <section className="rounded-xl border border-border bg-gradient-card p-6 space-y-5">
             <div className="flex items-end justify-between gap-4 flex-wrap">
