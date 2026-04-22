@@ -250,9 +250,10 @@ const TournamentDetail = () => {
                     Flip the lifecycle in real time. Updates broadcast instantly to every viewer.
                   </p>
                 </div>
-                {updateStatus.isPending && (
+                {(updateStatus.isPending || generateBracket.isPending) && (
                   <span className="font-mono text-[10px] text-muted-foreground flex items-center gap-1.5">
-                    <Loader2 className="h-3 w-3 animate-spin" /> SAVING…
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {generateBracket.isPending ? "GENERATING BRACKET…" : "SAVING…"}
                   </span>
                 )}
               </div>
@@ -260,12 +261,13 @@ const TournamentDetail = () => {
                 {(["draft", "open", "ongoing", "completed"] as const).map((s, i) => {
                   const meta = statusBadge[s];
                   const active = tournament.status === s;
+                  const busy = updateStatus.isPending || generateBracket.isPending;
                   return (
                     <button
                       key={s}
                       type="button"
                       onClick={() => handleStatusChange(s)}
-                      disabled={updateStatus.isPending || active}
+                      disabled={busy || active}
                       className={`group relative rounded-lg border px-3 py-3 text-left transition-all ${
                         active
                           ? "border-primary bg-primary/10 shadow-[var(--glow-primary)]"
@@ -291,6 +293,15 @@ const TournamentDetail = () => {
                 {tournament.status === "ongoing" && "ONGOING — bracket is live"}
                 {tournament.status === "completed" && "COMPLETED — tournament has wrapped"}
               </p>
+              {(tournament.status === "draft" || tournament.status === "open") && (
+                <p className="font-mono text-[10px] text-primary/80">
+                  // SWITCH TO ONGOING → BRACKET AUTO-GENERATES FROM {teams.length} REGISTERED TEAM
+                  {teams.length === 1 ? "" : "S"}
+                  {teams.length >= 2 &&
+                    teams.length !== Math.pow(2, Math.floor(Math.log2(teams.length))) &&
+                    ` (TRIMMED TO ${Math.pow(2, Math.floor(Math.log2(teams.length)))} FOR POWER-OF-2)`}
+                </p>
+              )}
             </section>
           )}
 
