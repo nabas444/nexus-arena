@@ -90,8 +90,24 @@ export function TournamentEventFeed({ events }: Props) {
                         {meta.label}
                       </span>
                       <span className="font-display text-sm font-bold truncate">{ev.title}</span>
+                      {typeof ev.matchCount === "number" && (
+                        <span className="font-mono text-[9px] tracking-widest px-1.5 py-0.5 rounded border border-border bg-background/60 text-foreground/80">
+                          {ev.matchCount} MATCH{ev.matchCount === 1 ? "" : "ES"}
+                        </span>
+                      )}
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5">{ev.description}</div>
+                    {ev.occurredAt && (
+                      <div className="font-mono text-[10px] text-muted-foreground/80 mt-1">
+                        // ORGANIZER TIMESTAMP {new Date(ev.occurredAt).toLocaleString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })}
+                      </div>
+                    )}
                   </div>
                   <span className="font-mono text-[10px] text-muted-foreground flex-shrink-0 mt-1">
                     {relTime(ev.at)}
