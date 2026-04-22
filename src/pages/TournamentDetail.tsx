@@ -99,6 +99,20 @@ const TournamentDetail = () => {
     }
   };
 
+  const handleStatusChange = async (next: Tournament["status"]) => {
+    if (!tournament || tournament.status === next) return;
+    try {
+      await updateStatus.mutateAsync({ id: tournament.id, status: next });
+      toast.success("Status updated", {
+        description: `Tournament is now ${statusBadge[next].label}.`,
+      });
+    } catch (err) {
+      toast.error("Could not update status", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
+    }
+  };
+
   if (tLoading) {
     return (
       <AppShell>
