@@ -4,8 +4,7 @@
 
 Check out the deployed application here:  
 
-👉 [![Live Demo](https://img.shields.io/badge/Live-Demo-green?style=for-the-badge)](( https://nexusarena-tournaments.lovable.app ))
-
+👉 [![Live Demo](https://img.shields.io/badge/Live-Demo-green?style=for-the-badge)]([https://your-live-link.com](https://nexusarena-tournaments.lovable.app/))
 🧠 Overview
 
 Nexus Arena is a modern, full-stack tournament management platform designed for organizing and managing competitive events such as campus sports, esports, and league-based competitions.
