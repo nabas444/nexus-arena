@@ -10,26 +10,32 @@ It provides a real-time, interactive system for handling tournaments—from crea
 To replace manual and disorganized tournament coordination with a centralized, real-time, and intelligent platform that delivers a professional competition experience.
 
 🧩 Key Features (Based on Your Actual Codebase)
+
 🏆 Tournament Management
 Create and manage tournaments via UI dialog
 View all tournaments in a dashboard
 Dedicated tournament detail pages
+
 👥 Team Management
 Add and manage teams
 Team identity with logos
 Team manager component for handling participants
+
 ⚔️ Match System
 Live match tracking using hooks
 Match feed showing ongoing/upcoming matches
 Match day view for scheduling and results
+
 🧠 Bracket System
 Dynamic tournament bracket visualization
 Custom hook (use-bracket) for bracket logic
 Supports structured competition flow
+
 📊 Leaderboard & Rankings
 Real-time leaderboard page
 Ranking system using use-rankings
 Performance-based standings
+
 📡 Real-Time Features
 Live updates for:
 matches
@@ -37,10 +43,12 @@ tournament events
 Hooks like:
 use-live-matches
 use-tournament-events
+
 📰 Event & Activity Feed
 Tournament event feed (updates, changes)
 Match activity feed
 Keeps participants informed in real-time
+
 🔐 Authentication System
 User authentication (login/signup)
 Profile page for users
