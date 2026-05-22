@@ -137,6 +137,121 @@ export type Database = {
         }
         Relationships: []
       }
+      team_invites: {
+        Row: {
+          created_at: string
+          id: string
+          invited_by: string
+          invited_handle: string
+          invited_user_id: string | null
+          status: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_by: string
+          invited_handle: string
+          invited_user_id?: string | null
+          status?: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_by?: string
+          invited_handle?: string
+          invited_user_id?: string | null
+          status?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invites_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          id: string
+          joined_at: string
+          role: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          role?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          role?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          bio: string | null
+          captain_id: string
+          created_at: string
+          id: string
+          logo_color: string
+          name: string
+          region: string
+          slug: string
+          tag: string
+          updated_at: string
+          verified: boolean
+        }
+        Insert: {
+          bio?: string | null
+          captain_id: string
+          created_at?: string
+          id?: string
+          logo_color?: string
+          name: string
+          region?: string
+          slug: string
+          tag: string
+          updated_at?: string
+          verified?: boolean
+        }
+        Update: {
+          bio?: string | null
+          captain_id?: string
+          created_at?: string
+          id?: string
+          logo_color?: string
+          name?: string
+          region?: string
+          slug?: string
+          tag?: string
+          updated_at?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
       tournament_teams: {
         Row: {
           created_at: string
@@ -237,7 +352,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_team_captain: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

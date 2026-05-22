@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { InvitesPanel } from "@/components/InvitesPanel";
 
 interface ProfileRow {
   id: string;
@@ -163,6 +164,8 @@ const Profile = () => {
             How you appear across the arena. Update your handle, name, and avatar.
           </p>
         </motion.div>
+
+        <InvitesPanel userId={user.id} />
 
         {loading ? (
           <div className="flex items-center justify-center py-20 text-muted-foreground font-mono text-sm gap-2">

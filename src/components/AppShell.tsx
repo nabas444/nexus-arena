@@ -1,6 +1,6 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trophy, LayoutGrid, Radio, Users, Bell, Search, Zap, LogOut, LogIn, UserCog } from "lucide-react";
+import { Trophy, LayoutGrid, Radio, Users, Bell, Search, Zap, LogOut, LogIn, UserCog, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -16,6 +16,7 @@ import { toast } from "sonner";
 const navItems = [
   { to: "/", label: "Hub", icon: LayoutGrid },
   { to: "/tournaments", label: "Tournaments", icon: Trophy },
+  { to: "/teams", label: "Teams", icon: Shield },
   { to: "/match-day", label: "Match Day", icon: Radio },
   { to: "/leaderboard", label: "Rankings", icon: Users },
 ];
