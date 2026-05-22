@@ -13,6 +13,9 @@ import MatchDay from "./pages/MatchDay.tsx";
 import Leaderboard from "./pages/Leaderboard.tsx";
 import Auth from "./pages/Auth.tsx";
 import Profile from "./pages/Profile.tsx";
+import Teams from "./pages/Teams.tsx";
+import TeamDetail from "./pages/TeamDetail.tsx";
+import PlayerProfile from "./pages/PlayerProfile.tsx";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +35,9 @@ const App = () => (
             <Route path="/bracket/:id" element={<Bracket />} />
             <Route path="/match-day" element={<MatchDay />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/teams" element={<Teams />} />
+            <Route path="/teams/:slug" element={<TeamDetail />} />
+            <Route path="/u/:handle" element={<PlayerProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
